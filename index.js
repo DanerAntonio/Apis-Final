@@ -1,10 +1,8 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const helmet = require('helmet');
-const dotenv = require('dotenv');
-
-dotenv.config();
 
 const app = express();
 
@@ -13,9 +11,9 @@ app.use(cors({
   origin: process.env.NODE_ENV === 'production'
     ? [
         'https://apls-final.vercel.app',
-        'https://apls-final.vercel.app' // Opcional: otros dominios
+        'https://apls-final.vercel.app'
       ]
-    : 'http://localhost:5173', // Desarrollo local
+    : 'http://localhost:5173',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -72,16 +70,30 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// [CORRECCIÓN] Nueva ruta raíz - Añadido para evitar 404
+app.get('/', (req, res) => {
+  res.status(200).json({
+    api: "TeoCat API",
+    status: "Operacional",
+    version: "1.0.0",
+    endpoints: {
+      auth: "/api/auth",
+      servicios: "/api/servicios",
+      health: "/api/health"
+    },
+    documentation: "https://github.com/tu-repo/docs"
+  });
+});
+
 // Manejo de errores para rutas no encontradas
 app.use((req, res, next) => {
   res.status(404).json({ error: 'Ruta no encontrada' });
 });
 
-// Configuración para Vercel (exportamos la app)
-if (process.env.NODE_ENV === 'production') {
-  module.exports = app;
-} else {
-  // Ejecución local
+// Exportación para Vercel + Ejecución local
+module.exports = app;
+
+if (require.main === module) {
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);
